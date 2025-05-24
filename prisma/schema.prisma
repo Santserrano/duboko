@@ -1,0 +1,70 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id     String     @id @unique 
+  email  String     @unique
+  name   String?
+  groups NoteGroup[]
+}
+
+model NoteGroup {
+  id     String     @id @default(cuid()) 
+  name   String
+  notes  Note[]
+  user   User       @relation(fields: [userId], references: [id])
+  userId String    
+}
+
+model Note {
+  id       String     @id @default(cuid()) 
+  title    String
+  content  String
+  group    NoteGroup  @relation(fields: [groupId], references: [id])
+  groupId  String    
+}
+
+model StudySession {
+  id              String      @id @default(cuid())
+  userId          String      // Relación con Clerk
+  date            DateTime    @default(now())
+  focusTime       Int         // Tiempo en minutos
+  breakTime       Int         // Tiempo en minutos
+  totalTime       Int         // Tiempo en minutos
+  streak          Int         // Días consecutivos
+  completedTasks  Task[]
+}
+
+model Task {
+  id             String      @id @default(cuid())
+  title          String
+  estimatedTime  Int
+  completed      Boolean     @default(false)
+  studySessionId String
+  studySession   StudySession @relation(fields: [studySessionId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String  @id @default(cuid())
+  title     String
+  url       String
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  userId    String   
+  date      DateTime 
+  note      String   
+  createdAt DateTime @default(now())
+  
+  @@index([userId, date])
+}
